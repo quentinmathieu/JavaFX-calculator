@@ -2,16 +2,21 @@ package fr.afpa;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Binding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
 
 
 /**
@@ -19,56 +24,104 @@ import javafx.stage.Stage;
  */
 public class App extends Application {
 
+    static Integer total = 0;
+    static boolean isFirst = true;
+    static boolean isCalculable= false;
+
+    public static final Integer PADDING = 40;
+    public static final double SPACING = 10.0;
+
+    private double xOffset = 0;
+    private double yOffset = 0;
+
+
+
+
     @Override
     public void start(Stage stage) {
+        // graphic vars
+        stage.initStyle(StageStyle.TRANSPARENT);
 
-         // graphic vars
-        double spacing = 10.0;
-        String headerLiearGradient = "-fx-background-color: linear-gradient(to right,#165d82 20%, #0a79b3 50%, #165d82 80%)";
-        Integer padding = 40;
+
+       
+
+        String headerLiearGradient = "-fx-background-color: linear-gradient(to right,#165d82 20%, #0a79b3 50%, #165d82 80%); -fx-background-radius: 10 10 0 0;";
 
         // create panes
         VBox globalPane = new VBox();
-        VBox header = new VBox();
-        GridPane numberBtns = new GridPane();
-        numberBtns.setVgap(spacing);
-        numberBtns.setHgap(spacing);
-        numberBtns.setPadding(new Insets(padding, padding, padding, padding));
+
+        globalPane.setOnMousePressed(event-> {
+            xOffset = event.getSceneX(); yOffset = event.getSceneY();
+        });
+        globalPane.setOnMouseDragged(event-> {
+                stage.setX(event.getScreenX() - xOffset);
+                stage.setY(event.getScreenY() - yOffset);
+    
+        });
+
+
+        globalPane.setStyle("-fx-background-radius: 10;");
+        AnchorPane header = new AnchorPane();
+        HBox titleBox = new HBox();
+        titleBox.prefWidthProperty().bind(header.widthProperty());
+        titleBox.setAlignment(Pos.CENTER);
+
+        TextArea calcArea = new TextArea();
+        calcArea.setDisable(true);
+        calcArea.setStyle("-fx-background-color: white;-fx-color: black");
+        calcArea.setStyle("-fx-padding: 10px;-fx-border-insets: 10px;-fx-background-insets: 10px;");
+        NumberBtns numberBtns = new NumberBtns(calcArea);
+        
+        HBox clearCalcBtns = new HBox();
+        clearCalcBtns.setAlignment(Pos.CENTER);
+        clearCalcBtns.setPadding(new Insets(0, PADDING, PADDING/2, PADDING));
 
         // add GUI components to each pane
         // Header
+        
         Label title = new Label("Calculator");
-        header.getChildren().add(title);
-        header.setAlignment(Pos.CENTER);
+        titleBox.getChildren().add(title);
         header.setStyle(headerLiearGradient);
+        header.getChildren().add(titleBox);
         title.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
-        title.setPadding(new Insets(padding/3, padding/3, padding/3, padding/3));
-
-        Integer j = 1;
-        // add components to the gridPane
-        for(Integer i = 0; i < 10; i++){
-            // for define elemnts by line
-            j = (i%5 == 0) ? j+1 : j;
-
-            // create & add the numer btn to the grid
-            Button btn = new Button(i.toString());
-            numberBtns.add(btn, i%5 , j ,1, 1);
-        }
+        title.setPadding(new Insets(PADDING/3, PADDING/3, PADDING/3, PADDING/3));
+        Button quitBtn = new Button("x");
+        quitBtn.setStyle("-fx-font-weight: bold; -fx-text-fill: white;-fx-background-color: transparent; -fx-font-size: 15px; ");
+        quitBtn.setCursor(Cursor.HAND);
+        header.getChildren().add(quitBtn);
+        AnchorPane.setTopAnchor(quitBtn, 0.0); 
+        AnchorPane.setRightAnchor(quitBtn, 0.0); 
         
-        // copy 1st field content in 2nd field content on 1st field value change
         
+        // quitbtn
+        quitBtn.setOnAction(event -> Platform.exit());
 
-        // add btn actions
-        // delBtn.setOnAction(event -> firstField.setText(""));
-        // exitBtn.setOnAction(event ->  Platform.exit());
+        // clear & calc btn
+        Button clearBtn = new Button("Calculate");
+        // Calculate and diplay on textArea
+        clearBtn.setOnAction(event -> calc(calcArea));
+        clearCalcBtns.getChildren().add(clearBtn);
 
         // add GUI elements to the global pane
         globalPane.getChildren().add(header);
+        globalPane.getChildren().add(calcArea);
         globalPane.getChildren().add(numberBtns);
+        globalPane.getChildren().add(clearCalcBtns);
 
-        stage.setScene(new Scene(globalPane));
+        Scene scene = new Scene(globalPane);
+
+        scene.setFill(Color.TRANSPARENT);
+
+        stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
+    }
+
+
+    public boolean calc(TextArea calcArea){
+        calcArea.setText(calcArea.getText()+" = "+App.total);
+        App.isCalculable = false;
+        return true;
     }
 
     public static void main(String[] args) {
